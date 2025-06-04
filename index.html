@@ -212,8 +212,14 @@
         let matchedPairs = 0;
         let canFlip = true;
 
-        // 卡片圖案
-        const cardSymbols = ['🌸', '🌟', '🎯', '🎨', '🎪'];
+        // 卡片圖案 - 改成圖片路徑
+        const cardSymbols = [
+            'images/card1.jpg',
+            'images/card2.jpg', 
+            'images/card3.jpg',
+            'images/card4.jpg',
+            'images/card5.jpg'
+        ];
 
         // 初始化遊戲
         function initGame() {
@@ -260,9 +266,15 @@
                 return;
             }
 
-            // 翻牌
+            // 翻牌 - 顯示圖片
             card.classList.add('flipped');
-            card.textContent = card.dataset.symbol;
+            const img = document.createElement('img');
+            img.src = card.dataset.symbol;
+            img.style.width = '80%';
+            img.style.height = '80%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '4px';
+            card.appendChild(img);
             flippedCards.push(card);
 
             if (flippedCards.length === 2) {
@@ -294,8 +306,8 @@
                 // 配對失敗，翻回去
                 card1.classList.remove('flipped');
                 card2.classList.remove('flipped');
-                card1.textContent = '';
-                card2.textContent = '';
+                card1.innerHTML = '';
+                card2.innerHTML = '';
             }
             
             flippedCards = [];
