@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻翻樂</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            max-width: 460px;
+            width: 100%;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 1.8em;
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 0.95em;
+            color: #718096;
+            margin-bottom: 24px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: #6b7280;
+            border: 2px solid #4b5563;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4em;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #ff8a65, #ffcc02);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card:hover::before {
+            opacity: 0.08;
+        }
+
+        .card:active {
+            transform: translateY(0);
+        }
+
+        .card.flipped {
+            background: white;
+            border-color: #ff8a65;
+            color: #2d3748;
+            font-size: 2.4em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .card.matched {
+            background: #fff8f0;
+            border-color: #ffcc02;
+            color: #d69e2e;
+            transform: scale(0.98);
+        }
+
+        .card.matched::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 0.7em;
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 16px;
+            background: #ff8a65;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            background: #ff7043;
+            transform: translateY(-1px);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        .win-message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #38a169;
+            margin-bottom: 16px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .win-message.show {
+            opacity: 1;
+        }
+
+        /* 手機優化 */
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 24px 20px;
+                margin: 0 12px;
+            }
+            
+            .title {
+                font-size: 1.6em;
+                margin-bottom: 10px;
+            }
+
+            .instructions {
+                font-size: 0.9em;
+                margin-bottom: 20px;
+            }
+            
+            .card {
+                font-size: 2em;
+            }
+            
+            .card.flipped {
+                font-size: 2em;
+            }
+            
+            .game-board {
+                gap: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .reset-btn {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">翻翻樂</h1>
+        <div class="instructions">
+            點擊翻牌，找出相同的配對！
+        </div>
+        <div class="win-message" id="winMessage">🎉 完成了！</div>
+        <div class="game-board" id="gameBoard"></div>
+        <button class="reset-btn" onclick="initGame()">重新開始</button>
+    </div>
+
+    <script>
+        // 遊戲狀態
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let canFlip = true;
+
+        // 卡片圖案
+        const cardSymbols = ['🌸', '🌟', '🎯', '🎨', '🎪'];
+
+        // 初始化遊戲
+        function initGame() {
+            const gameBoard = document.getElementById('gameBoard');
+            const winMessage = document.getElementById('winMessage');
+            
+            // 重置狀態
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            canFlip = true;
+            winMessage.classList.remove('show');
+            
+            // 創建卡片數據（每個符號2張）
+            const cardData = [];
+            cardSymbols.forEach(symbol => {
+                cardData.push(symbol, symbol);
+            });
+            
+            // 洗牌
+            for (let i = cardData.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
+            }
+            
+            // 清空遊戲板
+            gameBoard.innerHTML = '';
+            
+            // 創建卡片元素
+            cardData.forEach((symbol, index) => {
+                const card = document.createElement('button');
+                card.className = 'card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                card.addEventListener('click', () => flipCard(card));
+                gameBoard.appendChild(card);
+                cards.push(card);
+            });
+        }
+
+        // 翻牌邏輯
+        function flipCard(card) {
+            if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
+                return;
+            }
+
+            // 翻牌
+            card.classList.add('flipped');
+            card.textContent = card.dataset.symbol;
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                
+                setTimeout(() => {
+                    checkMatch();
+                }, 500);
+            }
+        }
+
+        // 檢查配對
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                // 配對成功
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                
+                if (matchedPairs === 5) {
+                    // 遊戲完成
+                    setTimeout(() => {
+                        document.getElementById('winMessage').classList.add('show');
+                    }, 200);
+                }
+            } else {
+                // 配對失敗，翻回去
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                card1.textContent = '';
+                card2.textContent = '';
+            }
+            
+            flippedCards = [];
+            canFlip = true;
+        }
+
+        // 初始化遊戲
+        initGame();
+    </script>
+</body>
+</html>
