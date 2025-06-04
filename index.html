@@ -58,7 +58,7 @@
 
         .card {
             aspect-ratio: 1;
-            background: #6b7280;
+            background: white;
             border: 2px solid #4b5563;
             border-radius: 8px;
             cursor: pointer;
@@ -226,13 +226,33 @@
             'images/card5.jpg',
             'images/card6.jpg'
         ];
+        
+        const cardBackImage = 'images/cardback.jpg';
 
         // 預載入圖片
         function preloadImages() {
             return new Promise((resolve) => {
                 let loadedCount = 0;
-                const totalImages = cardSymbols.length;
+                const totalImages = cardSymbols.length + 1; // +1 for card back
                 
+                // 預載入卡背
+                const backImg = new Image();
+                backImg.onload = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        resolve();
+                    }
+                };
+                backImg.onerror = () => {
+                    loadedCount++;
+                    if (loadedCount === totalImages) {
+                        resolve();
+                    }
+                };
+                backImg.src = cardBackImage;
+                preloadedImages[cardBackImage] = backImg;
+                
+                // 預載入卡片圖案
                 cardSymbols.forEach(src => {
                     const img = new Image();
                     img.onload = () => {
@@ -293,6 +313,15 @@
                 card.dataset.symbol = symbol;
                 card.dataset.index = index;
                 card.addEventListener('click', () => flipCard(card));
+                
+                // 添加卡背圖片
+                const backImg = preloadedImages[cardBackImage].cloneNode();
+                backImg.style.width = '100%';
+                backImg.style.height = '100%';
+                backImg.style.objectFit = 'cover';
+                backImg.style.borderRadius = '6px';
+                card.appendChild(backImg);
+                
                 gameBoard.appendChild(card);
                 cards.push(card);
             });
@@ -304,13 +333,14 @@
                 return;
             }
 
-            // 翻牌 - 使用預載入的圖片
+            // 翻牌 - 移除卡背，顯示卡面
             card.classList.add('flipped');
+            card.innerHTML = ''; // 清除卡背
             const img = preloadedImages[card.dataset.symbol].cloneNode();
-            img.style.width = '80%';
-            img.style.height = '80%';
+            img.style.width = '100%';
+            img.style.height = '100%';
             img.style.objectFit = 'cover';
-            img.style.borderRadius = '4px';
+            img.style.borderRadius = '6px';
             card.appendChild(img);
             flippedCards.push(card);
 
@@ -340,11 +370,26 @@
                     }, 200);
                 }
             } else {
-                // 配對失敗，翻回去
+                // 配對失敗，翻回去 - 恢復卡背
                 card1.classList.remove('flipped');
                 card2.classList.remove('flipped');
+                
+                // 恢復卡背圖片
                 card1.innerHTML = '';
+                const backImg1 = preloadedImages[cardBackImage].cloneNode();
+                backImg1.style.width = '100%';
+                backImg1.style.height = '100%';
+                backImg1.style.objectFit = 'cover';
+                backImg1.style.borderRadius = '6px';
+                card1.appendChild(backImg1);
+                
                 card2.innerHTML = '';
+                const backImg2 = preloadedImages[cardBackImage].cloneNode();
+                backImg2.style.width = '100%';
+                backImg2.style.height = '100%';
+                backImg2.style.objectFit = 'cover';
+                backImg2.style.borderRadius = '6px';
+                card2.appendChild(backImg2);
             }
             
             flippedCards = [];
