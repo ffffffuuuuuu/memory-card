@@ -19,16 +19,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
+            overflow: hidden;
         }
 
         .game-container {
             background: white;
             border-radius: 16px;
-            padding: 32px;
+            padding: 20px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-            max-width: 320px;
+            max-width: 340px;
             width: 100%;
+            max-height: 90vh;
         }
 
         .title {
@@ -48,10 +50,10 @@
 
         .game-board {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .card {
@@ -213,13 +215,14 @@
         let canFlip = true;
         let preloadedImages = {};
 
-        // 卡片圖案 - 改成圖片路徑
+        // 卡片圖案 - 改成圖片路徑 (12張牌，6種圖案)
         const cardSymbols = [
             'images/card1.jpg',
             'images/card2.jpg', 
             'images/card3.jpg',
             'images/card4.jpg',
-            'images/card5.jpg'
+            'images/card5.jpg',
+            'images/card6.jpg'
         ];
 
         // 預載入圖片
