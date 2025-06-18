@@ -147,17 +147,154 @@
         }
 
         .win-message {
-            text-align: center;
-            font-size: 1.2em;
-            color: #38a169;
-            margin-bottom: 16px;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: none;
         }
 
-        .win-message.show {
+        /* 完成彈窗樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
             opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            text-align: center;
+            padding: 30px 30px 20px;
+            background: linear-gradient(135deg, #ff8a65, #ffcc02);
+            border-radius: 20px 20px 0 0;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .modal-content {
+            padding: 0 30px 30px;
+        }
+
+        .card-showcase {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .showcase-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .showcase-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .showcase-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .showcase-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .showcase-description {
+            font-size: 0.9em;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-actions {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .play-again-btn {
+            background: #ff8a65;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .play-again-btn:hover {
+            background: #ff7043;
+            transform: translateY(-1px);
         }
 
         /* 手機優化 */
@@ -195,6 +332,42 @@
                 padding: 12px;
                 font-size: 0.9em;
             }
+
+            .modal {
+                margin: 10px;
+                max-height: 85vh;
+            }
+
+            .modal-header {
+                padding: 25px 20px 15px;
+            }
+
+            .modal-title {
+                font-size: 1.6em;
+            }
+
+            .modal-subtitle {
+                font-size: 1em;
+            }
+
+            .modal-content {
+                padding: 0 20px 25px;
+            }
+
+            .card-showcase {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .showcase-item {
+                padding: 15px;
+            }
+
+            .showcase-image {
+                width: 60px;
+                height: 60px;
+            }
         }
     </style>
 </head>
@@ -209,6 +382,23 @@
         <button class="reset-btn" onclick="initGame()">重新開始</button>
     </div>
 
+    <!-- 完成彈窗 -->
+    <div class="modal-overlay" id="completionModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <div class="modal-title">🎉 恭喜完成！</div>
+                <div class="modal-subtitle">這些圖片都是永安里的特色喔！一起來看看～</div>
+            </div>
+            <div class="modal-content">
+                <div class="card-showcase" id="cardShowcase"></div>
+                <div class="modal-actions">
+                    <button class="play-again-btn" onclick="playAgain()">再玩一次</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 遊戲狀態
         let cards = [];
@@ -217,14 +407,44 @@
         let canFlip = true;
         let preloadedImages = {};
 
-        // 卡片圖案 - 改成圖片路徑 (12張牌，6種圖案)
-        const cardSymbols = [
-            'images/card1.jpg',
-            'images/card2.jpg', 
-            'images/card3.jpg',
-            'images/card4.jpg',
-            'images/card5.jpg',
-            'images/card6.jpg'
+        // 卡片圖案和介紹資料
+        const cardData = [
+            {
+                image: 'images/card1.jpg',
+                fallback: '🏮',
+                title: '護安宮',
+                description: '永安里的信仰中心，每五年迎媽祖時遊子返鄉，是最熱鬧的時刻！'
+            },
+            {
+                image: 'images/card2.jpg',
+                fallback: '🐟',
+                title: '土虱頭',
+                description: '從阿牛小吃部望向對岸山脈，像極了正對著我們的土虱魚頭！'
+            },
+            {
+                image: 'images/card3.jpg',
+                fallback: '🐲',
+                title: '龍',
+                description: '從失落村莊望去，對岸山脈形似巨龍，與白虎共同守護永安。'
+            },
+            {
+                image: 'images/card4.jpg',
+                fallback: '🐢',
+                title: '神龜',
+                description: '從勝安宮遠眺，對岸山形如穩重的巨大烏龜，默默守護著這片土地。'
+            },
+            {
+                image: 'images/card5.jpg',
+                fallback: '🏫',
+                title: '永安國小',
+                description: '因翡翠水庫而走入歷史的小學，見證了永安里人口變遷的歲月痕跡。'
+            },
+            {
+                image: 'images/card6.jpg',
+                fallback: '🦁',
+                title: '石獅子',
+                description: '廟前莊嚴的石獅子，靜靜守護著信眾，是永安里的忠實守護神！'
+            }
         ];
         
         const cardBackImage = 'images/cardback.jpg';
@@ -233,42 +453,46 @@
         function preloadImages() {
             return new Promise((resolve) => {
                 let loadedCount = 0;
-                const totalImages = cardSymbols.length + 1; // +1 for card back
+                const totalImages = cardData.length + 1;
                 
                 // 預載入卡背
                 const backImg = new Image();
                 backImg.onload = () => {
+                    preloadedImages[cardBackImage] = backImg;
                     loadedCount++;
                     if (loadedCount === totalImages) {
                         resolve();
                     }
                 };
                 backImg.onerror = () => {
+                    // 卡背讀取失敗時使用預設樣式
+                    preloadedImages[cardBackImage] = null;
                     loadedCount++;
                     if (loadedCount === totalImages) {
                         resolve();
                     }
                 };
                 backImg.src = cardBackImage;
-                preloadedImages[cardBackImage] = backImg;
                 
                 // 預載入卡片圖案
-                cardSymbols.forEach(src => {
+                cardData.forEach(card => {
                     const img = new Image();
                     img.onload = () => {
+                        preloadedImages[card.image] = img;
                         loadedCount++;
                         if (loadedCount === totalImages) {
                             resolve();
                         }
                     };
                     img.onerror = () => {
+                        // 圖片載入失敗時使用備用符號
+                        preloadedImages[card.image] = null;
                         loadedCount++;
                         if (loadedCount === totalImages) {
                             resolve();
                         }
                     };
-                    img.src = src;
-                    preloadedImages[src] = img;
+                    img.src = card.image;
                 });
             });
         }
@@ -289,38 +513,44 @@
             flippedCards = [];
             matchedPairs = 0;
             canFlip = true;
-            winMessage.classList.remove('show');
             
             // 創建卡片數據（每個符號2張）
-            const cardData = [];
-            cardSymbols.forEach(symbol => {
-                cardData.push(symbol, symbol);
+            const gameCards = [];
+            cardData.forEach(card => {
+                gameCards.push(card.image, card.image);
             });
             
             // 洗牌
-            for (let i = cardData.length - 1; i > 0; i--) {
+            for (let i = gameCards.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
+                [gameCards[i], gameCards[j]] = [gameCards[j], gameCards[i]];
             }
             
             // 清空遊戲板
             gameBoard.innerHTML = '';
             
             // 創建卡片元素
-            cardData.forEach((symbol, index) => {
+            gameCards.forEach((symbol, index) => {
                 const card = document.createElement('button');
                 card.className = 'card';
                 card.dataset.symbol = symbol;
                 card.dataset.index = index;
                 card.addEventListener('click', () => flipCard(card));
                 
-                // 添加卡背圖片
-                const backImg = preloadedImages[cardBackImage].cloneNode();
-                backImg.style.width = '100%';
-                backImg.style.height = '100%';
-                backImg.style.objectFit = 'cover';
-                backImg.style.borderRadius = '6px';
-                card.appendChild(backImg);
+                // 添加卡背圖片或預設樣式
+                if (preloadedImages[cardBackImage]) {
+                    const backImg = preloadedImages[cardBackImage].cloneNode();
+                    backImg.style.width = '100%';
+                    backImg.style.height = '100%';
+                    backImg.style.objectFit = 'cover';
+                    backImg.style.borderRadius = '6px';
+                    card.appendChild(backImg);
+                } else {
+                    // 使用預設卡背樣式
+                    card.innerHTML = '?';
+                    card.style.fontSize = '2.5em';
+                    card.style.color = '#666';
+                }
                 
                 gameBoard.appendChild(card);
                 cards.push(card);
@@ -335,13 +565,29 @@
 
             // 翻牌 - 移除卡背，顯示卡面
             card.classList.add('flipped');
-            card.innerHTML = ''; // 清除卡背
-            const img = preloadedImages[card.dataset.symbol].cloneNode();
-            img.style.width = '100%';
-            img.style.height = '100%';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '6px';
-            card.appendChild(img);
+            card.innerHTML = '';
+            
+            // 尋找對應的卡片資料
+            const cardInfo = cardData.find(c => c.image === card.dataset.symbol);
+            
+            if (preloadedImages[card.dataset.symbol] && cardInfo) {
+                // 使用圖片
+                const img = preloadedImages[card.dataset.symbol].cloneNode();
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '6px';
+                card.appendChild(img);
+            } else if (cardInfo) {
+                // 使用備用符號
+                card.innerHTML = cardInfo.fallback;
+                card.style.fontSize = '2.5em';
+            } else {
+                // 最後備案
+                card.innerHTML = '❓';
+                card.style.fontSize = '2.5em';
+            }
+            
             flippedCards.push(card);
 
             if (flippedCards.length === 2) {
@@ -364,37 +610,121 @@
                 matchedPairs++;
                 
                 if (matchedPairs === 6) {
-                    // 遊戲完成
+                    // 遊戲完成，直接顯示彈窗
                     setTimeout(() => {
-                        document.getElementById('winMessage').classList.add('show');
-                    }, 200);
+                        showCompletionModal();
+                    }, 500);
                 }
             } else {
-                // 配對失敗，翻回去 - 恢復卡背
+                // 配對失敗，翻回去
                 card1.classList.remove('flipped');
                 card2.classList.remove('flipped');
                 
-                // 恢復卡背圖片
+                // 恢復卡背圖片或樣式
                 card1.innerHTML = '';
-                const backImg1 = preloadedImages[cardBackImage].cloneNode();
-                backImg1.style.width = '100%';
-                backImg1.style.height = '100%';
-                backImg1.style.objectFit = 'cover';
-                backImg1.style.borderRadius = '6px';
-                card1.appendChild(backImg1);
-                
                 card2.innerHTML = '';
-                const backImg2 = preloadedImages[cardBackImage].cloneNode();
-                backImg2.style.width = '100%';
-                backImg2.style.height = '100%';
-                backImg2.style.objectFit = 'cover';
-                backImg2.style.borderRadius = '6px';
-                card2.appendChild(backImg2);
+                
+                if (preloadedImages[cardBackImage]) {
+                    const backImg1 = preloadedImages[cardBackImage].cloneNode();
+                    backImg1.style.width = '100%';
+                    backImg1.style.height = '100%';
+                    backImg1.style.objectFit = 'cover';
+                    backImg1.style.borderRadius = '6px';
+                    card1.appendChild(backImg1);
+                    
+                    const backImg2 = preloadedImages[cardBackImage].cloneNode();
+                    backImg2.style.width = '100%';
+                    backImg2.style.height = '100%';
+                    backImg2.style.objectFit = 'cover';
+                    backImg2.style.borderRadius = '6px';
+                    card2.appendChild(backImg2);
+                } else {
+                    // 使用預設卡背樣式
+                    card1.innerHTML = '?';
+                    card1.style.fontSize = '2.5em';
+                    card1.style.color = '#666';
+                    
+                    card2.innerHTML = '?';
+                    card2.style.fontSize = '2.5em';
+                    card2.style.color = '#666';
+                }
             }
             
             flippedCards = [];
             canFlip = true;
         }
+
+        // 顯示完成彈窗
+        function showCompletionModal() {
+            const modal = document.getElementById('completionModal');
+            const showcase = document.getElementById('cardShowcase');
+            
+            // 清空展示區域
+            showcase.innerHTML = '';
+            
+            // 創建圖片展示
+            cardData.forEach(card => {
+                const item = document.createElement('div');
+                item.className = 'showcase-item';
+                
+                if (preloadedImages[card.image]) {
+                    // 使用圖片
+                    const img = document.createElement('img');
+                    img.className = 'showcase-image';
+                    img.src = card.image;
+                    img.alt = card.title;
+                    item.appendChild(img);
+                } else {
+                    // 使用備用符號
+                    const symbolDiv = document.createElement('div');
+                    symbolDiv.style.width = '80px';
+                    symbolDiv.style.height = '80px';
+                    symbolDiv.style.display = 'flex';
+                    symbolDiv.style.alignItems = 'center';
+                    symbolDiv.style.justifyContent = 'center';
+                    symbolDiv.style.fontSize = '3em';
+                    symbolDiv.style.backgroundColor = '#f0f0f0';
+                    symbolDiv.style.borderRadius = '8px';
+                    symbolDiv.style.marginBottom = '12px';
+                    symbolDiv.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                    symbolDiv.textContent = card.fallback;
+                    item.appendChild(symbolDiv);
+                }
+                
+                const title = document.createElement('div');
+                title.className = 'showcase-title';
+                title.textContent = card.title;
+                
+                const description = document.createElement('div');
+                description.className = 'showcase-description';
+                description.textContent = card.description;
+                
+                item.appendChild(title);
+                item.appendChild(description);
+                showcase.appendChild(item);
+            });
+            
+            // 顯示彈窗
+            modal.classList.add('show');
+        }
+
+        // 關閉彈窗
+        function closeModal() {
+            document.getElementById('completionModal').classList.remove('show');
+        }
+
+        // 再玩一次
+        function playAgain() {
+            closeModal();
+            initGame();
+        }
+
+        // 點擊彈窗外部關閉
+        document.getElementById('completionModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeModal();
+            }
+        });
 
         // 初始化遊戲
         initGame();
